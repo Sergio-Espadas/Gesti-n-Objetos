@@ -5,6 +5,10 @@ body {
   margin: 0 auto;
 }
 
+a {
+  text-decoration: none;
+}
+
 /* Menu */
 
 .var {
@@ -21,7 +25,7 @@ body {
 
 .barra__navegacion {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(10, 10%);
   place-items: center center;
   justify-content: center;
   padding-top: 1em;
@@ -180,6 +184,24 @@ body {
   color: #1c1c1c;
   font-size: 0.8em;
   text-decoration: none;
+}
+
+.btn_elim {
+  display: grid;
+  place-items: center center;
+  justify-content: center;
+  padding: 2em;
+}
+
+.btn_elim button {
+  background-color: #c93737;
+  border: 1px solid #1c1c1c;
+}
+
+.btn_elim button:hover {
+  background-color: #c90707;
+  border: 1px solid #000000;
+  transform: scale(1.1);
 }
 
 /* Este será el footer */

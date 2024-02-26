@@ -80,6 +80,8 @@ class RestaurantController {
         let hamburguesas = new Category("Hamburguesas", "Jugosas y al punto");
         let helados = new Category("Helados", "Helados Naturales");
 
+        this[MODEL].addCategory(hamburguesas, brochetas, helados);
+
         // Crear un objeto de la clase Allergen
         let gluten = new Allergen("Gluten", "Las hamburguesas contiene gluten");
         let lactosa = new Allergen("Lactosa", "La salsa contiene leche");
@@ -124,15 +126,19 @@ class RestaurantController {
 
     onLoad = () => {
         this[LOAD_RESTAURANT]();
-        this[VIEW].showCategories(this[MODEL].getCategories());
-        this[VIEW].showDishes(this[MODEL].getCategories());
         this.onAddCategory();
         this.onAddAllergens();
         this.onAddMenus();
         this.onAddRestaurant();
+        this[VIEW].showAdminMenu();
+        this[VIEW].bindAdminMenu(
+            this.handleNewCategoryForm,
+            this.handleRemoveCategoryForm);
     };
 
     onInit = () => {
+        this[VIEW].showCategories(this[MODEL].getCategories());
+        this[VIEW].showDishes(this[MODEL].getCategories());
         // Categorias
         this[VIEW].bindDishesCategoryList(this.handleDishesCategoryList,);
         this[VIEW].bindDishesCategoryListInMenu(this.handleDishesCategoryList,);
@@ -223,6 +229,51 @@ class RestaurantController {
         this[VIEW].showProductInNewWindow(dish);
 
 
+    };
+
+    handleNewCategoryForm = () => {
+        this[VIEW].showNewCategoryForm();
+        this[VIEW].bindNewCategoryForm(this.handleCreateCategory);
+
+    };
+
+    handleCreateCategory = (title, url, desc) => {
+        const cat = this[MODEL].getCategorie(title);
+        console.log(cat)
+        cat.description = desc;
+        let done;
+        let error;
+        try {
+            this[MODEL].addCategory(cat);
+            this.onAddCategory();
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+        this[VIEW].showNewCategoryModal(done, cat, error);
+    };
+
+
+    handleRemoveCategoryForm = () => {
+        this[VIEW].showRemoveCategoryForm(this[MODEL].getCategories());
+        this[VIEW].bindRemoveCategoryForm(this.handleRemoveCategory);
+    };
+
+    handleRemoveCategory = (title) => {
+        let done; let error; let
+            cat;
+        try {
+            cat = this[MODEL].getCategory(title);
+            this[MODEL].removeCategory(cat);
+            done = true;
+            this.onAddCategory();
+            this.handleRemoveCategoryForm();
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+        this[VIEW].showRemoveCategoryModal(done, cat, error);
     };
 
 }

@@ -103,7 +103,6 @@ class Category {
                 return this.#description;
             },
             set(value) {
-                if (!value) throw new EmptyValueException('description');
                 this.#description = value;
             },
         });
@@ -345,7 +344,9 @@ let RestaurantsManager = (function () {
             return {
                 *[Symbol.iterator]() {
                     for (const category of categories) {
-                        yield category;
+                        if ((category.name instanceof Category) || category instanceof Category) {
+                            yield category;
+                        }
                     }
                 },
             };
@@ -356,26 +357,23 @@ let RestaurantsManager = (function () {
                 throw new ObjecManagerException('category', 'Category');
             }
 
-            let categorias = this.#categories;
+            if (this.#categories.includes(category)) {
+                const storedCategory = this.#categories.find(c => c.name === category);
+                const values = (ordered)
+                    ? storedCategory.dishes[0].name(ordered)
+                    : storedCategory.dishes[0].name;
+                return {
+                    *[Symbol.iterator]() {
+                        for (const product of values) {
+                            yield product;
+                        }
+                    },
+                };
 
-            for (const cate of categorias) {
-                if (cate.name.name.includes(category.name)) {
-                    const storedCategory = cate;
-                    const values = (ordered)
-                        ? storedCategory.dishes[0].name(ordered)
-                        : storedCategory.dishes[0].name;
-                    return {
-                        *[Symbol.iterator]() {
-                            for (const product of values) {
-                                yield product;
-                            }
-                        },
-                    };
-
-                }
             }
-
         }
+
+
 
         getAllergenProducts(allergen, ordered) {
             if (!(allergen instanceof Allergen)) {
@@ -439,7 +437,6 @@ let RestaurantsManager = (function () {
             for (const res of restaurants) {
                 if (res.name.includes(restaurant.name)) {
                     const storedRes = res;
-                    console.log(storedRes);
                     return storedRes
                 }
             }
@@ -464,13 +461,25 @@ let RestaurantsManager = (function () {
 
         }
 
+        getCategorie(title = 'Anon') {
+            let cat = this.#categories.includes(title);
+
+            if (!cat) {
+                cat = new Category(title);
+            } else {
+                cat = cat.category;
+            }
+            return cat;
+        }
+
         getCategory(title) {
 
             let categorias = this.#categories;
-
             for (const cate of categorias) {
-                if (cate.name.name.includes(title)) {
-                    var cat = cate.name;
+                if (cate instanceof Category) {
+                    if (cate.name.includes(title)) {
+                        var cat = cate;
+                    }
                 }
             }
 
@@ -560,7 +569,6 @@ let RestaurantsManager = (function () {
 
             let dishes = this.#dishes;
             for (const di of dishes) {
-                console.log(di.name);
                 const dish = di.name.find(obj => obj.name === name);
                 if (dish) {
                     return dish;
@@ -629,7 +637,6 @@ let RestaurantsManager = (function () {
                     throw new Error("La categoría ya existe.");
                 }
 
-                console.log(position);
 
                 // Eliminar la categoría del sistema
                 this.#categories.splice(position, 1);
@@ -682,7 +689,7 @@ let RestaurantsManager = (function () {
                 if (position === -1) {
                     throw new Error("El menú no existe.");
                 }
-                console.log(position);
+
                 // Eliminar el menú del sistema
                 this.#menus.splice(position, 1);
             }
@@ -732,7 +739,6 @@ let RestaurantsManager = (function () {
                     throw new Error("El alergeno no existe.");
                 }
 
-                console.log(position);
 
                 // Eliminar el alergeno del sistema
                 this.#allergens.splice(position, 1);
@@ -783,21 +789,18 @@ let RestaurantsManager = (function () {
 
                 //Buscamos  si el plato existe y si es asi lo eliminamos
                 let position = this.#getDishPosition(dish);
-                console.log(position);
                 if (position !== -1) {
                     this.#dishes.splice(position, 1);
 
                     // Buscamos en las categorias y si lo encontramos borramos el plato
                     for (const category of this.#categories) {
                         let categoryPosition = this.#getCategoryPosition(category);
-                        console.log(categoryPosition);
 
                         let objCategory = this.#categories[categoryPosition];
 
                         // Verificar si objCategory es undefined antes de acceder a dishes
                         if (objCategory && objCategory.dishes) {
                             let dishIndex = objCategory.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
-                            console.log(dishIndex);
 
                             if (dishIndex !== -1) {
                                 this.#categories[categoryPosition].dishes.splice(dishIndex, 1);
@@ -809,14 +812,12 @@ let RestaurantsManager = (function () {
                     // Buscamos en los alergenos y si lo encontramos borramos el plato
                     for (const allergen of this.#allergens) {
                         let allergenPosition = this.#getAllergenPosition(allergen);
-                        console.log(allergenPosition);
 
                         let objAllergen = this.#allergens[allergenPosition];
 
                         // Verificar si objAllergen es undefined antes de acceder a dishes
                         if (objAllergen && objAllergen.dishes) {
                             let dishIndex = objAllergen.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
-                            console.log(dishIndex);
 
                             if (dishIndex !== -1) {
                                 this.#allergens[allergenPosition].dishes.splice(dishIndex, 1);
@@ -828,14 +829,12 @@ let RestaurantsManager = (function () {
                     // Buscamos en los menus y si lo encontramos borramos el plato
                     for (const menu of this.#menus) {
                         let menuPosition = this.#getMenuPosition(menu);
-                        console.log(menuPosition);
 
                         let objMenu = this.#menus[menuPosition];
 
                         // Verificar si objAllergen es undefined antes de acceder a dishes
                         if (objMenu && objMenu.dishes) {
                             let dishIndex = objMenu.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
-                            console.log(dishIndex);
 
                             if (dishIndex !== -1) {
                                 this.#menus[menuPosition].dishes.splice(dishIndex, 1);
@@ -892,8 +891,6 @@ let RestaurantsManager = (function () {
                 if (position === -1) {
                     throw new Error("El restaurante no existe.");
                 }
-
-                console.log(position);
 
                 // Eliminar el restaurante del sistema
                 this.#restaurants.splice(position, 1);

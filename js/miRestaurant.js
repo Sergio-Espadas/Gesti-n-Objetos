@@ -9,6 +9,8 @@ const historyActions = {
     MenuListInMenu: (event) => RestaurantApp.handleDishesMenuList(event.state.menu),
     RestaurantListInMenu: (event) => RestaurantApp.handleRestaurantList(event.state.restaurant),
     showDetailsDishes: (event) => RestaurantApp.handleShowDetailsDishes(event.state.category),
+    newCategory: () => ManagerApp.handleNewCategoryForm(),
+    removeCategory: () => ManagerApp.handleRemoveCategoryForm(),
 
 };
 

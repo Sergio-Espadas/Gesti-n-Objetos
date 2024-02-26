@@ -1,4 +1,6 @@
 const EXCECUTE_HANDLER = Symbol('excecuteHandler');
+import { Category } from './restaurant.js';
+import { newCategoryValidation } from './validation.js';
 
 class RestaurantView {
 
@@ -27,58 +29,67 @@ class RestaurantView {
 
     bindInit(handler) {
         document.getElementById('init').addEventListener('click', (event) => {
-            this[EXCECUTE_HANDLER](handler, [], 'body', { action: 'init' }, '#inicio',
-                event);
+            this[EXCECUTE_HANDLER](
+                handler,
+                [],
+                "body",
+                { action: "init" },
+                "#",
+                event
+            );
         });
         document.getElementById('logo').addEventListener('click', (event) => {
-            this[EXCECUTE_HANDLER](handler, [], 'body', { action: 'init' }, '#inicio',
-                event);
+            this[EXCECUTE_HANDLER](
+                handler,
+                [],
+                "body",
+                { action: "init" },
+                "#",
+                event
+            );
         });
     }
 
     showCategories(categories) {
-        if (this.platos.children.length > 1)
-            this.platos.children[1].remove();
+        this.categorias.replaceChildren();
+        if (this.categorias.children.length > 1)
+            this.categorias.children[1].remove();
         const container = document.createElement('div');
         container.id = 'categorylist';
         container.classList.add("category");
         for (const category of categories) {
-            container.insertAdjacentHTML('beforeend',
-                `<div class="category__container">
-                    <a data-category="${category.name.name}" href="#categorylist">
-                        <div class="cat-list-image category__photo"><img alt="${category.name.name}"
-                            src="./Imagenes/${category.name.name}.jpg" />
+            if (category instanceof Category) {
+                container.insertAdjacentHTML('beforeend',
+                    `<div class="category__container">
+                    <a data-category="${category.name}" href="#categorylist">
+                        <div class="cat-list-image category__photo"><img alt="${category.name}"
+                            src="./Imagenes/${category.name}.jpg" />
                         </div>
                         <div class="cat-list-text category_info">
-                            <h3>${category.name.name}</h3>
-                            <p>${category.name.description}</p>
+                            <h3>${category.name}</h3>
+                            <p>${category.description}</p>
                         </div>
                     </a>
                 </div>`
 
-            )
+                )
+            }
         };
         this.categorias.append(container);
     }
 
+
     showCategoriesInMenu(categories) {
-        const div = document.createElement('div');
-        div.classList.add('nav-item');
-        div.classList.add('dropdown');
-        div.insertAdjacentHTML('beforeend',
-            `<a class="nav-link dropdown-toggle"
-            href="#categorylist" id="navCats" role="button"
-            data-bs-toggle="dropdown" aria-expanded="false">
-            Categorías</a>`);
-        const container = document.createElement('ul');
-        container.classList.add('dropdown-menu');
+        const navCats = document.getElementById('navCats');
+        const container = navCats.nextElementSibling;
+        container.replaceChildren();
         for (const category of categories) {
-            container.insertAdjacentHTML('beforeend', `<div><a data-category="${category.name.name}" 
-            class="dropdown-item" href="#category">${category.name.name}</a></div>`);
+            if (category instanceof Category) {
+                container.insertAdjacentHTML('beforeend', `<li><a data-category="${category.name}" class="dropdown-item" href="#categorylist">${category.name}</a></li>`);
+            }
         }
-        div.append(container);
-        this.menu.append(div);
     }
+
 
     showAllergensInMenu(allergens) {
         const div = document.createElement('div');
@@ -141,28 +152,30 @@ class RestaurantView {
     }
 
     showDishes(dishes) {
+        this.platos.replaceChildren();
         if (this.platos.children.length > 1)
             this.platos.children[1].remove();
         const container = document.createElement('div');
         container.classList.add("category");
 
         for (const dish of dishes) {
-            let aleatorio = Math.floor(Math.random() * 4);
-            console.log(dish);
-            container.insertAdjacentHTML('beforeend',
-                `<div class="category__container">
-                    <a data-category="${dish.dishes[0].name[aleatorio].name}" href="#disheslist">
-                        <div class="cat-list-image category__photo"><img alt="${dish.dishes[0].name[aleatorio].name}"
-                            src="./Imagenes/${dish.dishes[0].name[aleatorio].name}.jpg" />
-                        </div>
-                        <div class="cat-list-text category_info">
-                            <h3>${dish.dishes[0].name[aleatorio].name}</h3>
-                            <p>${dish.dishes[0].name[aleatorio].description}</p>
-                        </div>
-                    </a>
+            if (dish.name instanceof Category) {
+                let aleatorio = Math.floor(Math.random() * 4);
+                container.insertAdjacentHTML('beforeend',
+                    `<div class="category__container">
+                <a data-category="${dish.dishes[0].name[aleatorio].name}" href="#disheslist">
+                <div class="cat-list-image category__photo"><img alt="${dish.dishes[0].name[aleatorio].name}"
+                src="./Imagenes/${dish.dishes[0].name[aleatorio].name}.jpg" />
+                </div>
+                <div class="cat-list-text category_info">
+                <h3>${dish.dishes[0].name[aleatorio].name}</h3>
+                <p>${dish.dishes[0].name[aleatorio].description}</p>
+                </div>
+                </a>
                 </div>`
 
-            )
+                )
+            }
         };
         this.platos.append(container);
     }
@@ -174,7 +187,6 @@ class RestaurantView {
         for (const link of links) {
             link.addEventListener('click', (event) => {
                 const { category } = event.currentTarget.dataset;
-                console.log(category);
                 this[EXCECUTE_HANDLER](
                     handler,
                     [category],
@@ -190,7 +202,7 @@ class RestaurantView {
     // Este es el desplegable de las categorias
     bindDishesCategoryListInMenu(handler) {
         const navCats = document.getElementById('navCats');
-        const links = navCats.nextSibling.querySelectorAll('a');
+        const links = navCats.nextElementSibling.querySelectorAll('a');
         for (const link of links) {
             link.addEventListener('click', (event) => {
                 const { category } = event.currentTarget.dataset;
@@ -275,7 +287,6 @@ class RestaurantView {
                     { action: 'showProduct', category },
                     '#detailsDish',
                     event,
-                    console.log(category)
                 );
             });
         }
@@ -407,7 +418,7 @@ class RestaurantView {
         container.classList.add('container');
         container.classList.add('mt-5');
         container.classList.add('mb-5');
-        console.log(dish);
+
         if (dish) {
             container.id = 'dish-details';
             container.classList.add(`${dish.name}-style`);
@@ -451,7 +462,6 @@ class RestaurantView {
             container.insertAdjacentHTML('beforeend', '<button id="b-close" class="btn btn-primary text-uppercase m-2 px-4">Cerrar todas las ventanas</button>');
 
         } else {
-            console.log(dish);
             container.insertAdjacentHTML(
                 'beforeend',
                 `<div class="row d-flex justify-content-center">
@@ -469,7 +479,6 @@ class RestaurantView {
         main.replaceChildren();
         header.replaceChildren();
         let container;
-        console.log(dish);
         if (dish) {
             container = document.createElement('div');
             container.id = 'dish-details';
@@ -509,7 +518,6 @@ class RestaurantView {
             container.insertAdjacentHTML('beforeend', '<button class="btn btnprimary text-uppercase m-2 px-4"	onClick = "window.close()" > Cerrar</button > ');
 
         } else {
-            console.log(dish);
             container.insertAdjacentHTML(
                 'beforeend',
                 `<div class="row d-flex justify-content-center">
@@ -550,6 +558,198 @@ class RestaurantView {
             openWindow.close();
         }
         this.openWindowMap.clear();
+    }
+
+    showAdminMenu() {
+        const menuOption = document.createElement('div');
+        menuOption.classList.add('nav-item');
+        menuOption.classList.add('dropdown');
+        menuOption.insertAdjacentHTML(
+            'afterbegin',
+            `<a class="nav-link dropdown-toggle" href="#" id="navServices" role = "button" data-bs-toggle="dropdown" aria-expanded="false" > Adminitración</a > `,
+        );
+        const suboptions = document.createElement('ul');
+        suboptions.classList.add('dropdown-menu');
+        suboptions.insertAdjacentHTML('beforeend', `<li><a id="lnewCategory" class="dropdown-item" href ="#new-category" > Crear categoría</a ></li > `);
+        suboptions.insertAdjacentHTML('beforeend', `<li><a id="ldelCategory" class="dropdown-item" href ="#del-category" > Eliminar categoría</a ></li > `);
+        suboptions.insertAdjacentHTML('beforeend', `<li><a id="lnewProduct" class="dropdown-item" href ="#new-product" > Crear producto</a ></li > `);
+        suboptions.insertAdjacentHTML('beforeend', `<li><a id="ldelProduct" class="dropdown-item" href ="#del-product" > Eliminar producto</a ></li > `);
+        menuOption.append(suboptions);
+        this.menu.append(menuOption);
+    }
+
+    showNewCategoryForm() {
+        this.platos.replaceChildren();
+        if (this.categories.children.length > 1)
+            this.categories.children[1].remove();
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'new-category';
+        container.insertAdjacentHTML(
+            'afterbegin',
+            `<h1 class="display-5">Nueva categoría</h1>`,
+        );
+        container.insertAdjacentHTML(
+            'beforeend',
+            `<form name="fNewCategory" role="form" class="row g-3" novalidate>
+				<div class="col-md-6 mb-3">
+					<label class="form-label" for="ncTitle">Título *</label>
+					<div class="input-group">
+						<span class="input-group-text"><i class="bi bi-type"></i></span>
+						<input type="text" class="form-control" id="ncTitle"
+							name="ncTitle"
+							placeholder="Título de categoría" value="" required>
+							<div class="invalid-feedback">El título es obligatorio.</div>
+							<div class="valid-feedback">Correcto.</div>
+					</div>
+				</div>
+				<div class="col-md-6 mb-3">
+					<label class="form-label" for="ncUrl">URL de la imagen *</label>
+					<div class="input-group">
+						<span class="input-group-text"><i class="bi bi-fileimage"></i></span>
+						<input type="url" class="form-control" id="ncUrl" name="ncUrl"
+							placeholder="URL de la imagen"
+							value="" required>
+							<div class="invalid-feedback">La URL no es válida.</div>
+							<div class="valid-feedback">Correcto.</div>
+					</div>
+				</div>
+				<div class="col-md-12 mb-3">
+					<label class="form-label" for="ncDescription">Descripción</label>
+					<div class="input-group">
+						<span class="input-group-text"><i class="bi bi-bodytext"></i></span>
+						<input type="text" class="form-control" id="ncDescription"
+							name="ncDescription" value="">
+							<div class="invalid-feedback"></div>
+							<div class="valid-feedback">Correcto.</div>
+					</div>
+				</div>
+				<div class="mb-12">
+					<button class="btn btn-primary" type="submit">Enviar</button>
+					<button class="btn btn-primary" type="reset">Cancelar</button>
+				</div>
+			</form>`,
+        );
+        this.platos.append(container);
+    }
+
+    bindAdminMenu(hNewCategory, hRemoveCategory) {
+        const newCategoryLink = document.getElementById('lnewCategory');
+        newCategoryLink.addEventListener('click', (event) => {
+            this[EXCECUTE_HANDLER](hNewCategory, [], '#new-category', {
+                action:
+                    'newCategory'
+            }, '#', event);
+        });
+        const delCategoryLink = document.getElementById('ldelCategory');
+        delCategoryLink.addEventListener('click', (event) => {
+            this[EXCECUTE_HANDLER](hRemoveCategory, [], '#remove-category', {
+                action: 'removeCategory'
+            }, '#', event);
+        });
+    }
+
+    showNewCategoryModal(done, cat, error) {
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+        const name = document.getElementById('messageModalTitle');
+        name.innerHTML = 'Nueva Categoría';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">La categoría
+		<strong>${cat.name}</strong> ha sido creada correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3"><i class="bi bi-exclamationtriangle"></i> La categoría <strong>${cat.name}</strong> ya está
+		creada.</div>`,
+            );
+        }
+        messageModal.show();
+        const listener = (event) => {
+            if (done) {
+                document.fNewCategory.reset();
+            }
+            document.fNewCategory.ncTitle.focus();
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, {
+            once: true
+        });
+    }
+
+    bindNewCategoryForm(handler) {
+        newCategoryValidation(handler);
+    }
+
+    showRemoveCategoryForm(categories) {
+        this.platos.replaceChildren();
+        if (this.categories.children.length > 1)
+            this.categories.children[1].remove();
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'remove-category';
+        container.insertAdjacentHTML(
+            'afterbegin',
+            '<h1 class="display-5 text-center">Eliminar una categoría</h1>',
+        );
+        const row = document.createElement('div');
+        row.classList.add('category')
+        for (const category of categories) {
+            if (category instanceof Category) {
+                row.insertAdjacentHTML('beforeend', `
+                <div class="category__container">
+                    <a data-category="${category.name}" href="#product-list">
+                        <div class="cat-list-image category__photo"><img alt="${category.name}"
+                            src="./Imagenes/${category.name}.jpg" />
+                        </div>
+                        <div class="cat-list-text category_info">
+                            <h3>${category.name}</h3>
+                            <p>${category.description}</p>
+                        </div>
+                        <div class="btn_elim"><button class="btn btn-primary" data-category="${category.name}" type='button'>Eliminar</button></div>
+                    </a>
+                </div>`);
+            }
+        }
+        container.append(row);
+        this.platos.append(container);
+    }
+
+    showRemoveCategoryModal(done, cat, error) {
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = 'Borrado de categoría';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        console.log(done)
+        console.log(cat)
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">La categoría
+		<strong>${cat.name}</strong> ha sido eliminada correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    La categoría <strong>${cat.name}</strong> no se ha podido
+                    borrar.</div>`,
+            );
+        }
+        messageModal.show();
+    }
+
+    bindRemoveCategoryForm(handler) {
+        const removeContainer = document.getElementById('remove-category');
+        const buttons = removeContainer.getElementsByTagName('button');
+        for (const button of buttons) {
+            button.addEventListener('click', function (event) {
+                handler(this.dataset.category);
+            });
+        }
     }
 
 }
