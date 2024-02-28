@@ -1,6 +1,6 @@
 const EXCECUTE_HANDLER = Symbol('excecuteHandler');
 import { Category } from './restaurant.js';
-import { newCategoryValidation } from './validation.js';
+import { newCategoryValidation, newProductValidation } from './validation.js';
 
 class RestaurantView {
 
@@ -58,22 +58,20 @@ class RestaurantView {
         container.id = 'categorylist';
         container.classList.add("category");
         for (const category of categories) {
-            if (category instanceof Category) {
-                container.insertAdjacentHTML('beforeend',
-                    `<div class="category__container">
-                    <a data-category="${category.name}" href="#categorylist">
-                        <div class="cat-list-image category__photo"><img alt="${category.name}"
-                            src="./Imagenes/${category.name}.jpg" />
+            container.insertAdjacentHTML('beforeend',
+                `<div class="category__container">
+                    <a data-category="${category.category.name}" href="#categorylist">
+                        <div class="cat-list-image category__photo"><img alt="${category.category.name}"
+                            src="./Imagenes/${category.category.name}.jpg" />
                         </div>
                         <div class="cat-list-text category_info">
-                            <h3>${category.name}</h3>
-                            <p>${category.description}</p>
+                            <h3>${category.category.name}</h3>
+                            <p>${category.category.description}</p>
                         </div>
                     </a>
                 </div>`
 
-                )
-            }
+            )
         };
         this.categorias.append(container);
     }
@@ -84,9 +82,7 @@ class RestaurantView {
         const container = navCats.nextElementSibling;
         container.replaceChildren();
         for (const category of categories) {
-            if (category instanceof Category) {
-                container.insertAdjacentHTML('beforeend', `<li><a data-category="${category.name}" class="dropdown-item" href="#categorylist">${category.name}</a></li>`);
-            }
+            container.insertAdjacentHTML('beforeend', `<li><a data-category="${category.category.name}" class="dropdown-item" href="#categorylist">${category.category.name}</a></li>`);
         }
     }
 
@@ -104,8 +100,8 @@ class RestaurantView {
         const container = document.createElement('ul');
         container.classList.add('dropdown-menu');
         for (const allergen of allergens) {
-            container.insertAdjacentHTML('beforeend', `<div><a data-allergen="${allergen.name.name}" 
-            class="dropdown-item" href="#allergen">${allergen.name.name}</a></div>`);
+            container.insertAdjacentHTML('beforeend', `<div><a data-allergen="${allergen.allergen.name}" 
+            class="dropdown-item" href="#allergen">${allergen.allergen.name}</a></div>`);
         }
         div.append(container);
         this.menu.append(div);
@@ -124,8 +120,8 @@ class RestaurantView {
         const container = document.createElement('ul');
         container.classList.add('dropdown-menu');
         for (const menu of menus) {
-            container.insertAdjacentHTML('beforeend', `<div><a data-menu="${menu.name.name}" 
-            class="dropdown-item" href="#menu">${menu.name.name}</a></div>`);
+            container.insertAdjacentHTML('beforeend', `<div><a data-menu="${menu.menu.name}" 
+            class="dropdown-item" href="#menu">${menu.menu.name}</a></div>`);
         }
         div.append(container);
         this.menu.append(div);
@@ -157,25 +153,22 @@ class RestaurantView {
             this.platos.children[1].remove();
         const container = document.createElement('div');
         container.classList.add("category");
-
         for (const dish of dishes) {
-            if (dish.name instanceof Category) {
-                let aleatorio = Math.floor(Math.random() * 4);
-                container.insertAdjacentHTML('beforeend',
-                    `<div class="category__container">
-                <a data-category="${dish.dishes[0].name[aleatorio].name}" href="#disheslist">
-                <div class="cat-list-image category__photo"><img alt="${dish.dishes[0].name[aleatorio].name}"
-                src="./Imagenes/${dish.dishes[0].name[aleatorio].name}.jpg" />
+            let aleatorio = Math.floor(Math.random() * dish.dishes.length);
+            container.insertAdjacentHTML('beforeend',
+                `<div class="category__container">
+                <a data-category="${dish.dishes[aleatorio].name}" href="#disheslist">
+                <div class="cat-list-image category__photo"><img alt="${dish.dishes[aleatorio].name}"
+                src="./Imagenes/${dish.dishes[aleatorio].name}.jpg" />
                 </div>
                 <div class="cat-list-text category_info">
-                <h3>${dish.dishes[0].name[aleatorio].name}</h3>
-                <p>${dish.dishes[0].name[aleatorio].description}</p>
+                <h3>${dish.dishes[aleatorio].name}</h3>
+                <p>${dish.dishes[aleatorio].description}</p>
                 </div>
                 </a>
                 </div>`
 
-                )
-            }
+            )
         };
         this.platos.append(container);
     }
@@ -634,7 +627,7 @@ class RestaurantView {
         this.platos.append(container);
     }
 
-    bindAdminMenu(hNewCategory, hRemoveCategory) {
+    bindAdminMenu(hNewCategory, hRemoveCategory, hNewProductForm, hRemoveProduct) {
         const newCategoryLink = document.getElementById('lnewCategory');
         newCategoryLink.addEventListener('click', (event) => {
             this[EXCECUTE_HANDLER](hNewCategory, [], '#new-category', {
@@ -642,11 +635,22 @@ class RestaurantView {
                     'newCategory'
             }, '#', event);
         });
+
         const delCategoryLink = document.getElementById('ldelCategory');
         delCategoryLink.addEventListener('click', (event) => {
             this[EXCECUTE_HANDLER](hRemoveCategory, [], '#remove-category', {
                 action: 'removeCategory'
             }, '#', event);
+        });
+
+        const newProductLink = document.getElementById('lnewProduct');
+        newProductLink.addEventListener('click', (event) => {
+            this[EXCECUTE_HANDLER](hNewProductForm, [], '#new-product', { action: 'newProduct' }, '#', event);
+        });
+
+        const delProductLink = document.getElementById('ldelProduct');
+        delProductLink.addEventListener('click', (event) => {
+            this[EXCECUTE_HANDLER](hRemoveProduct, [], '#remove-product', { action: 'removeProduct' }, '#', event);
         });
     }
 
@@ -698,21 +702,19 @@ class RestaurantView {
         const row = document.createElement('div');
         row.classList.add('category')
         for (const category of categories) {
-            if (category instanceof Category) {
-                row.insertAdjacentHTML('beforeend', `
+            row.insertAdjacentHTML('beforeend', `
                 <div class="category__container">
-                    <a data-category="${category.name}" href="#product-list">
-                        <div class="cat-list-image category__photo"><img alt="${category.name}"
-                            src="./Imagenes/${category.name}.jpg" />
+                    <a data-category="${category.category.name}" href="#product-list">
+                        <div class="cat-list-image category__photo"><img alt="${category.category.name}"
+                            src="./Imagenes/${category.category.name}.jpg" />
                         </div>
                         <div class="cat-list-text category_info">
-                            <h3>${category.name}</h3>
-                            <p>${category.description}</p>
+                            <h3>${category.category.name}</h3>
+                            <p>${category.category.description}</p>
                         </div>
-                        <div class="btn_elim"><button class="btn btn-primary" data-category="${category.name}" type='button'>Eliminar</button></div>
+                        <div class="btn_elim"><button class="btn btn-primary" data-category="${category.category.name}" type='button'>Eliminar</button></div>
                     </a>
                 </div>`);
-            }
         }
         container.append(row);
         this.platos.append(container);
@@ -725,17 +727,15 @@ class RestaurantView {
         title.innerHTML = 'Borrado de categoría';
         const body = messageModalContainer.querySelector('.modal-body');
         body.replaceChildren();
-        console.log(done)
-        console.log(cat)
         if (done) {
             body.insertAdjacentHTML('afterbegin', `<div class="p-3">La categoría
-		<strong>${cat.name}</strong> ha sido eliminada correctamente.</div>`);
+		<strong>${cat.category.name}</strong> ha sido eliminada correctamente.</div>`);
         } else {
             body.insertAdjacentHTML(
                 'afterbegin',
                 `<div class="error text-danger p-3">
                     <i class="bi bi-exclamation-triangle"></i>
-                    La categoría <strong>${cat.name}</strong> no se ha podido
+                    La categoría <strong>${cat.category.name}</strong> no se ha podido
                     borrar.</div>`,
             );
         }
@@ -751,6 +751,289 @@ class RestaurantView {
             });
         }
     }
+
+    showNewProductForm(categories, allergens) {
+        this.platos.replaceChildren();
+        if (this.categories.children.length > 1) this.categories.children[1].remove();
+
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'new-product';
+
+        container.insertAdjacentHTML(
+            'afterbegin',
+            '<h1 class="display-5">Nuevo producto</h1>',
+        );
+
+        const form = document.createElement('form');
+        form.name = 'fNewProduct';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+        form.classList.add('row');
+        form.classList.add('g-3');
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npSerial">Nombre *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="text" class="form-control" id="npSerial" name="npSerial" value="" required>
+                        <div class="invalid-feedback">El número de serie es obligatorio. Debe ser un entero.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npUrl">URL *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-card-image"></i></span>
+                        <input type="url" class="form-control" id="npUrl" name="npUrl"
+                            placeholder="http://www.test.es" value="" min="0" step="1" required>
+                        <div class="invalid-feedback">La URL no es válida.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npCategories">Categorías *</label>
+                    <div class="input-group">
+                        <label class="input-group-text" for="npCategories"><i class="bi bi-card-checklist"></i></label>
+                        <select class="form-select" name="npCategories" id="npCategories" multiple required>
+                        </select>
+                        <div class="invalid-feedback">El producto debe pertenecer al menos a una categoría.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        const npCategories = form.querySelector('#npCategories');
+        for (const category of categories) {
+            npCategories.insertAdjacentHTML('beforeend', `<option value="${category.category.name}">${category.category.name}</option>`);
+        }
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npAllergen">Alergenos *</label>
+                    <div class="input-group">
+                        <label class="input-group-text" for="npAllergen"><i class="bi bi-card-checklist"></i></label>
+                        <select class="form-select" name="npAllergen" id="npAllergen" multiple required>
+                        </select>
+                        <div class="invalid-feedback">El producto debe pertenecer al menos a una categoría.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        const npAllergen = form.querySelector('#npAllergen');
+        for (const allergen of allergens) {
+            npAllergen.insertAdjacentHTML('beforeend', `<option value="${allergen.allergen.name}">${allergen.allergen.name}</option>`);
+        }
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-4 mb-0">
+                    <label class="form-label" for="npModel">Descripción</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                        <textarea class="form-control" id="npDescription" name="npDescription" rows="4">
+                        </textarea>
+                        <div class="invalid-feedback"></div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-3 mb-0">
+                    <label class="form-label" for="npModel">Ingredintes</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                        <textarea class="form-control" id="npIngredients" name="npIngredients" rows="4">
+                        </textarea>
+                        <div class="invalid-feedback"></div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="mb-12">
+                    <button class="btn btn-primary" type="submit">Enviar</button>
+                    <button class="btn btn-primary" type="reset">Cancelar</button>
+                </div>`,
+        );
+
+        container.append(form);
+        this.platos.append(container);
+    }
+
+
+    showNewProductModal(done, dish, error) {
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = 'Nuevo Plato';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">El plato <strong>${dish.name}</strong> ha sido creada correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3"><i class="bi bi-exclamation-triangle"></i> El plato <strong>${dish.name}</strong> no ha podido crearse correctamente.</div>`,
+            );
+        }
+        messageModal.show();
+        const listener = (event) => {
+            if (done) {
+                document.fNewProduct.reset();
+            }
+            document.fNewProduct.npSerial.focus();
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
+    }
+
+    bindNewProductForm(handler) {
+        newProductValidation(handler);
+    }
+
+
+    showRemoveProductForm(categories) {
+        this.platos.replaceChildren();
+        if (this.categories.children.length > 1) this.categories.children[1].remove();
+
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'remove-product';
+
+        container.insertAdjacentHTML(
+            'afterbegin',
+            '<h1 class="display-5">Eliminar un producto</h1>',
+        );
+
+        const form = document.createElement('form');
+        form.name = 'fNewProduct';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+        form.classList.add('row');
+        form.classList.add('g-3');
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-6 mb-3">
+                    <label class="form-label" for="npCategories">Categorías del producto</label>
+                    <div class="input-group">
+                        <label class="input-group-text" for="rpCategories"><i class="bi bi-card-checklist"></i></label>
+                        <select class="form-select" name="rpCategories" id="rpCategories">
+                            <option disabled selected>Selecciona una categoría</option>
+                        </select>
+                    </div>
+                </div>`,
+        );
+        const rpCategories = form.querySelector('#rpCategories');
+        for (const category of categories) {
+            rpCategories.insertAdjacentHTML('beforeend', `<option value="${category.category.name}">${category.category.name}</option>`);
+        }
+
+        container.append(form);
+        container.insertAdjacentHTML(
+            'beforeend',
+            '<div id="product-list" class="container my-3"><div class="row"></div></div>',
+        );
+
+        this.platos.append(container);
+    }
+
+    bindRemoveProductSelects(hCategories) {
+        const rpCategories = document.getElementById('rpCategories');
+        rpCategories.addEventListener('change', (event) => {
+            this[EXCECUTE_HANDLER](
+                hCategories,
+                [event.currentTarget.value],
+                '#remove-product',
+                { action: 'removeProductByCategory', category: event.currentTarget.value },
+                '#remove-product',
+                event,
+            );
+        });
+    }
+
+
+    showRemoveProductList(categories) {
+        const listContainer = document.getElementById('product-list').querySelector('div.row');
+        listContainer.replaceChildren();
+
+        let exist = false;
+        for (const category of categories) {
+            exist = true;
+            listContainer.insertAdjacentHTML('beforeend', `<div class="col-md-4 rProduct">
+                    <figure class="card card-product-grid card-lg"> <a data-serial="${category.name}" href="#single-product" class="img-wrap"><img class="${category.name}-style" src="./Imagenes/${category.name}.jpg"></a>
+                        <figcaption class="info-wrap">
+                            <div class="row">
+                                <div class="col-md-8"> <a data-serial="${category.name}" href="#single-product" class="title">${category.name} - ${category.name}</a> </div>
+                                <div class="col-md-4">
+                                    <div class="rating text-right"> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> </div>
+                                </div>
+                            </div>
+                        </figcaption>
+                        <div class="bottom-wrap"> <a href="#" data-serial="${category.name}" class="btn btn-primary float-right"> Eliminar </a>
+                            <div class="price-wrap"> <span class="price h5">${category.name}</span> <br> <small class="text-success">Free shipping</small> </div>
+                        </div>
+                    </figure>
+                </div>`);
+        }
+        if (!exist) {
+            listContainer.insertAdjacentHTML('beforeend', '<p class="text-danger"><i class="bi bi-exclamation-triangle"></i> No existen productos para esta categoría o tipo.</p>');
+        }
+    }
+
+    bindRemoveProduct(handler) {
+        const productList = document.getElementById('product-list');
+        const buttons = productList.querySelectorAll('a.btn');
+        for (const button of buttons) {
+            button.addEventListener('click', function (event) {
+                handler(this.dataset.serial);
+                event.preventDefault();
+            });
+        }
+    }
+
+    showRemoveProductModal(done, product, error) {
+        const productList = document.getElementById('product-list');
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = 'Producto eliminado';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">El plato <strong>${product.name}</strong> ha sido eliminado correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                '<div class="error text-danger p-3"><i class="bi bi-exclamation-triangle"></i> El producto no existe en el manager.</div>',
+            );
+        }
+        messageModal.show();
+        const listener = (event) => {
+            if (done) {
+                const button = productList.querySelector(`a.btn[data-serial="${product.name}"]`);
+                button.parentElement.parentElement.parentElement.remove();
+            }
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
+    }
+
 
 }
 

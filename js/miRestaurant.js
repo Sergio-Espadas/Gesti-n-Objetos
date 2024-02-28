@@ -4,6 +4,12 @@ const historyActions = {
     init: () => {
         RestaurantApp.handleInit();
     },
+
+    removeProductByCategory: (event) => {
+        ManagerApp.handleRemoveProductForm();
+        ManagerApp.handleRemoveProductListByCategory(event.state.category);
+    },
+
     CategoryList: (event) => RestaurantApp.handleDishesCategoryList(event.state.category),
     AllergenListInMenu: (event) => RestaurantApp.handleDishesAllergenList(event.state.allergen),
     MenuListInMenu: (event) => RestaurantApp.handleDishesMenuList(event.state.menu),
@@ -11,6 +17,8 @@ const historyActions = {
     showDetailsDishes: (event) => RestaurantApp.handleShowDetailsDishes(event.state.category),
     newCategory: () => ManagerApp.handleNewCategoryForm(),
     removeCategory: () => ManagerApp.handleRemoveCategoryForm(),
+    newProduct: () => ManagerApp.handleNewProductForm(),
+    removeProduct: () => ManagerApp.handleRemoveProductForm()
 
 };
 
@@ -20,6 +28,7 @@ window.addEventListener('popstate', (event) => {
         historyActions[event.state.action](event);
     }
 });
+
 
 
 history.replaceState({ action: 'init' }, null);

@@ -47,7 +47,6 @@ class Dish {
                 return this.#ingredients;
             },
             set(value) {
-                if (!value) throw new EmptyValueException('ingredients');
                 this.#ingredients = value;
             },
         });
@@ -60,7 +59,6 @@ class Dish {
                 return this.#image;
             },
             set(value) {
-                if (!value) throw new EmptyValueException('image');
                 this.#image = value;
             },
         });
@@ -324,44 +322,29 @@ let RestaurantsManager = (function () {
 
 
         #getCategoryPosition(category) {
-            return this.#categories.findIndex((elemento) => elemento.name === category.name);
+            return this.#categories.findIndex((elemento) => elemento.category === category.category);
         }
 
 
         #getAllergenPosition(allergen) {
-            return this.#allergens.findIndex((elemento) => elemento.name === allergen.name);
+            return this.#allergens.findIndex((elemento) => elemento.allergen === allergen.allergen);
         }
 
 
         #getMenuPosition(menu) {
-            return this.#menus.findIndex((elemento) => elemento.name === menu.name);
-        }
-
-
-        // Getter para obtener un iterador de categorías
-        getCategories() {
-            const categories = this.#categories;
-            return {
-                *[Symbol.iterator]() {
-                    for (const category of categories) {
-                        if ((category.name instanceof Category) || category instanceof Category) {
-                            yield category;
-                        }
-                    }
-                },
-            };
+            return this.#menus.findIndex((elemento) => elemento.menu === menu.menu);
         }
 
         getCategoryProducts(category, ordered) {
-            if (!(category instanceof Category)) {
+            if (!(category.category instanceof Category)) {
                 throw new ObjecManagerException('category', 'Category');
             }
 
             if (this.#categories.includes(category)) {
-                const storedCategory = this.#categories.find(c => c.name === category);
+                const storedCategory = this.#categories.find(ct => ct.category === category.category);
                 const values = (ordered)
-                    ? storedCategory.dishes[0].name(ordered)
-                    : storedCategory.dishes[0].name;
+                    ? storedCategory.dishes(ordered)
+                    : storedCategory.dishes;
                 return {
                     *[Symbol.iterator]() {
                         for (const product of values) {
@@ -376,53 +359,46 @@ let RestaurantsManager = (function () {
 
 
         getAllergenProducts(allergen, ordered) {
-            if (!(allergen instanceof Allergen)) {
+            if (!(allergen.allergen instanceof Allergen)) {
                 throw new ObjecManagerException('allergen', 'allergen');
             }
 
-            let allergens = this.#allergens;
+            if (this.#allergens.includes(allergen)) {
+                const storedAllergen = this.#allergens.find(ct => ct.allergen === allergen.allergen);
+                console.log(storedAllergen)
+                const values = (ordered)
+                    ? storedAllergen.dishes(ordered)
+                    : storedAllergen.dishes;
+                return {
+                    *[Symbol.iterator]() {
+                        for (const product of values) {
+                            yield product;
+                        }
+                    },
+                };
 
-            for (const aller of allergens) {
-                if (aller.name.name.includes(allergen.name)) {
-                    const storedAllergen = aller;
-                    const values = (ordered)
-                        ? storedAllergen.dishes[0].name(ordered)
-                        : storedAllergen.dishes[0].name;
-                    return {
-                        *[Symbol.iterator]() {
-                            for (const product of values) {
-                                yield product;
-                            }
-                        },
-                    };
-
-                }
             }
 
         }
 
         getMenuProducts(menu, ordered) {
-            if (!(menu instanceof Menu)) {
-                throw new ObjecManagerException('menu', 'Menu');
+            if (!(menu.menu instanceof Menu)) {
+                throw new ObjecManagerException('menu', 'menu');
             }
 
-            let menus = this.#menus;
+            if (this.#menus.includes(menu)) {
+                const storedMenu = this.#menus.find(ct => ct.menu === menu.menu);
+                const values = (ordered)
+                    ? storedMenu.dishes(ordered)
+                    : storedMenu.dishes;
+                return {
+                    *[Symbol.iterator]() {
+                        for (const product of values) {
+                            yield product;
+                        }
+                    },
+                };
 
-            for (const men of menus) {
-                if (men.name.name.includes(menu.name)) {
-                    const storedMenu = men;
-                    const values = (ordered)
-                        ? storedMenu.dishes[0].name(ordered)
-                        : storedMenu.dishes[0].name;
-                    return {
-                        *[Symbol.iterator]() {
-                            for (const product of values) {
-                                yield product;
-                            }
-                        },
-                    };
-
-                }
             }
 
         }
@@ -475,11 +451,10 @@ let RestaurantsManager = (function () {
         getCategory(title) {
 
             let categorias = this.#categories;
+
             for (const cate of categorias) {
-                if (cate instanceof Category) {
-                    if (cate.name.includes(title)) {
-                        var cat = cate;
-                    }
+                if (cate.category instanceof Category) {
+                    var cat = this.#categories.find(ct => ct.category.name === title);
                 }
             }
 
@@ -496,8 +471,8 @@ let RestaurantsManager = (function () {
             let allergens = this.#allergens;
 
             for (const alle of allergens) {
-                if (alle.name.name.includes(title)) {
-                    var aller = alle.name;
+                if (alle.allergen instanceof Allergen) {
+                    var aller = this.#allergens.find(ct => ct.allergen.name === title);
                 }
             }
 
@@ -513,8 +488,8 @@ let RestaurantsManager = (function () {
             let menus = this.#menus;
 
             for (const menu of menus) {
-                if (menu.name.name.includes(title)) {
-                    var men = menu.name;
+                if (menu.menu instanceof Menu) {
+                    var men = this.#menus.find(ct => ct.menu.name === title);
                 }
             }
 
@@ -533,12 +508,27 @@ let RestaurantsManager = (function () {
             return {
                 *[Symbol.iterator]() {
                     for (const menu of menuIterator) {
-                        yield menu;
+                        if (menu.menu instanceof Menu) {
+                            yield menu;
+                        }
                     }
                 },
             };
         }
 
+        // Getter para obtener un iterador de categorías
+        getCategories() {
+            const categories = this.#categories;
+            return {
+                *[Symbol.iterator]() {
+                    for (const category of categories) {
+                        if (category.category instanceof Category) {
+                            yield category;
+                        }
+                    }
+                },
+            };
+        }
 
         // Getter para obtener un iterador de alérgenos
         getAllergens() {
@@ -546,7 +536,10 @@ let RestaurantsManager = (function () {
             return {
                 *[Symbol.iterator]() {
                     for (const allergen of allergenIterator) {
-                        yield allergen;
+                        console.log(allergen)
+                        if (allergen.allergen instanceof Allergen) {
+                            yield allergen;
+                        }
                     }
                 },
             };
@@ -569,14 +562,26 @@ let RestaurantsManager = (function () {
 
             let dishes = this.#dishes;
             for (const di of dishes) {
-                const dish = di.name.find(obj => obj.name === name);
-                if (dish) {
-                    return dish;
+                if (di instanceof Dish) {
+                    const dish = dishes.find(obj => obj.name === name);
+                    if (dish) {
+                        return dish;
+                    }
                 }
             }
             return null; // Si no se encuentra el objeto, devolvemos null
         }
 
+        getDishNT(title = 'Anon') {
+            let dish = this.#dishes.includes(title);
+
+            if (!dish) {
+                dish = new Dish(title);
+            } else {
+                dish = dish.dish;
+            }
+            return dish;
+        }
 
 
         // Getter para obtener un iterador de restaurantes
@@ -593,35 +598,22 @@ let RestaurantsManager = (function () {
 
 
         // Método para añadir una nueva categoría
-        addCategory(...newCategory) {
-            for (const category of newCategory) {
-
-                // Verificar si newCategory es una instancia de la clase Category
-                if (!(category instanceof Category)) {
-                    throw new Error("La categoría no es un objeto Category.");
+        addCategory(...categories) {
+            for (const cat of categories) {
+                if (!(cat instanceof Category)) {
+                    throw new CategoryException();
                 }
-
-                //Verifcar que la categoría no es null
-                if (category === null) {
-                    throw new Error("La categoría es Null.");
+                if (cat === null) {
+                    throw new EmptyValueException();
                 }
+                let obj = { category: cat, dishes: [] };
 
-                // Sacamos la posición
-                let position = this.#categories.findIndex((elemento) => elemento.name === category.name)
-
-                // Verificar si la categoría ya existe
-                if (position !== -1) {
-                    throw new Error("La categoría ya existe.");
+                if (this.#getCategoryPosition(obj) !== -1) {
+                    throw new CategoryInTheListException();
+                } else {
+                    this.#categories.push(obj);
                 }
-
-                // Añadir la nueva categoría
-                this.#categories.push(category, {
-                    dishes: [],
-                });
             }
-
-            // Permitir encadenar llamadas
-            return this;
         }
 
 
@@ -630,7 +622,7 @@ let RestaurantsManager = (function () {
             for (const category of categoriesToRemove) {
 
                 // Sacamos la posición
-                let position = this.#categories.findIndex((elemento) => elemento.name === category.name)
+                let position = this.#categories.findIndex((elemento) => elemento.category === category.category);
 
                 // Verificar si la categoría ya existe
                 if (position === -1) {
@@ -648,34 +640,20 @@ let RestaurantsManager = (function () {
         // Método para añadir un menú
         addMenu(...menuToAdd) {
             for (const menu of menuToAdd) {
-                // Verificar si menuToAdd es una instancia de la clase Menu
                 if (!(menu instanceof Menu)) {
-                    throw new Error("El menú no es un objeto Menu.");
+                    throw new MenuException();
                 }
-
-                //Verifcar que los menus no son null
                 if (menu === null) {
-                    throw new Error("El menu es null.");
+                    throw new EmptyValueException();
                 }
+                let obj = { menu: menu, dishes: [] };
 
-                // Sacamos la posición
-                let position = this.#menus.findIndex((elemento) => elemento.name === menu.name)
-
-                // Verificar si la categoría ya existe
-                if (position !== -1) {
-                    throw new Error("El menu ya existe.");
+                if (this.#getMenuPosition(obj) !== -1) {
+                    throw new CategoryInTheListException();
+                } else {
+                    this.#menus.push(obj);
                 }
-
-                // Añadir el menú al sistema
-                this.#menus.push(menu, {
-                    dishes: [],
-                });
-
             }
-
-
-            // Permitir encadenar llamadas
-            return this;
         }
 
 
@@ -698,32 +676,21 @@ let RestaurantsManager = (function () {
 
         // Método para añadir un alérgeno
         addAllergen(...allergenToAdd) {
-            for (const allergen of allergenToAdd) {
-                // Verificar si allergenToAdd es una instancia de la clase Allergen
-                if (!(allergen instanceof Allergen)) {
-                    throw new Error("El alérgeno no es un objeto Allergen.");
+            for (const all of allergenToAdd) {
+                if (!(all instanceof Allergen)) {
+                    throw new AllergnException();
                 }
-
-                //Verifcar que el alergeno no es null
-                if (allergen === null) {
-                    throw new Error("El alergeno es null.");
+                if (all === null) {
+                    throw new EmptyValueException();
                 }
+                let obj = { allergen: all, dishes: [] };
 
-                // Sacamos la posición
-                let position = this.#allergens.findIndex((elemento) => elemento.name === allergen.name)
-
-                // Verificar si la categoría ya existe
-                if (position !== -1) {
-                    throw new Error("El alergeno ya existe.");
+                if (this.#getCategoryPosition(obj) !== -1) {
+                    throw new AllergenInTheListException();
+                } else {
+                    this.#allergens.push(obj);
                 }
-
-                // Añadir el alérgeno al sistema
-                this.#allergens.push(allergen, {
-                    dishes: [],
-                });
             }
-            // Permitir encadenar llamadas
-            return this;
         }
 
 
@@ -767,11 +734,15 @@ let RestaurantsManager = (function () {
                     throw new Error("El plato ya existe.");
                 }
 
-                // Añadir el plato al sistema
-                this.#dishes.push(dish, {
-                    categories: [],
-                    allergens: [],
-                });
+                let obj =
+
+                    // Añadir el plato al sistema
+                    this.#dishes.push({
+                        dish: dishToAdd,
+                        categories: [],
+                        allergens: [],
+                        menu: []
+                    });
             }
 
             // Permitir encadenar llamadas
@@ -899,125 +870,154 @@ let RestaurantsManager = (function () {
 
 
         // Método para asignar un plato a una categoría
-        assignCategoryToDish(categoryName, ...dishName) {
-            // Verificar si Category es null
-            if (categoryName === null) {
-                throw new Error("La categoría es null.");
+        assignCategoryToDish(cat, ...dishes) {
+            //primero nos aseguramos que introducimos un tipo de categoria
+            if (!(cat instanceof Category)) {
+                throw new CategoryException();
+            }
+            if (cat === null) {
+                throw new EmptyValueException();
             }
 
-            // Verificar si Dish es null
-            if (dishName === null) {
-                throw new Error("El plato es null.");
+            //segundo tenemos que encontrar la categoria
+            let obj = { category: cat };
+            let categoryPosition = this.#getCategoryPosition(obj);
+            if (categoryPosition !== -1) {
+                //Buscar la posición del plato en la categoria
+                //vamos pasando por cada plato
+                for (let di of dishes) {
+                    if (!(di instanceof Dish)) {
+                        throw new DishException();
+                    }
+                    if (di === null) {
+                        throw new EmptyValueException();
+                    }
+
+                    //comprobamos si el plato existe en nuestra colección de platos, y si no existe lo añadimos
+                    if (this.#getDishPosition(di) === -1) {
+                        this.addDish(di);
+                    }
+
+                    let objCategory = this.#categories[categoryPosition];
+                    let dishIndex = objCategory.dishes.findIndex(
+                        (busqueda) => busqueda.name === di.name
+                    );
+
+                    if (dishIndex !== -1) {
+                        throw new DishInTheListException();
+                    } else {
+                        this.#categories[categoryPosition].dishes.push(di);
+                    }
+                }
+            } else {
+                //si la categoría no existe se crea
+                this.addCategory(cat);
+                //como ya vamos a tener esa categoría, para no repetir el código volvemos a llamar al método
+                //para que añada los plato ya que hemos creado la caegoría
+                this.assignCategoryToDish(cat, ...dishes);
             }
-
-            // Buscar la categoría en el sistema
-            let category = this.#categories.find((cat) => cat.name === categoryName);
-
-            // Si la categoría no existe, se añade al sistema
-            if (!category) {
-                category = { name: categoryName, dishes: [] };
-                this.#categories.push(category);
-            }
-
-            // Buscar el plato en el sistema
-            let dish = this.#dishes.find((d) => d.name === dishName);
-
-
-            // Si el plato no existe, se añade al sistema
-            if (!dish) {
-                dish = { name: dishName, categories: [] };
-                this.#dishes.push(dish);
-            }
-
-
-            // Asignar el plato a la categoría
-            category.dishes.push(dish);
-            // Asignar la categoría al plato
-            dish.categories.push(category);
-
-            // Permitir encadenar llamadas
-            return this;
         }
 
 
         // Método para asignar un plato a una alegeria
-        assignAllergenToDish(allergenName, ...dishName) {
-            // Verificar si allergen es null
+        assignAllergenToDish(allergenName, ...dishes) {
+            //primero nos aseguramos que introducimos un tipo de categoria
+            if (!(allergenName instanceof Allergen)) {
+                throw new AllergenException();
+            }
             if (allergenName === null) {
-                throw new Error("El alergeno es null.");
+                throw new EmptyValueException();
             }
 
-            // Verificar si Dish es null
-            if (dishName === null) {
-                throw new Error("El plato es null.");
+            //segundo tenemos que encontrar la categoria
+            let obj = { allergen: allergenName };
+            let allergenPosition = this.#getAllergenPosition(obj);
+            if (allergenPosition !== -1) {
+                //Buscar la posición del plato en la categoria
+                //vamos pasando por cada plato
+                for (let di of dishes) {
+                    if (!(di instanceof Dish)) {
+                        throw new DishException();
+                    }
+                    if (di === null) {
+                        throw new EmptyValueException();
+                    }
+
+                    //comprobamos si el plato existe en nuestra colección de platos, y si no existe lo añadimos
+                    if (this.#getDishPosition(di) === -1) {
+                        this.addDish(di);
+                    }
+
+                    let objCategory = this.#allergens[allergenPosition];
+                    let dishIndex = objCategory.dishes.findIndex(
+                        (busqueda) => busqueda.name === di.name
+                    );
+
+                    if (dishIndex !== -1) {
+                        throw new DishInTheListException();
+                    } else {
+                        this.#allergens[allergenPosition].dishes.push(di);
+                    }
+                }
+            } else {
+                //si la categoría no existe se crea
+                this.addAllergen(allergenName);
+                //como ya vamos a tener esa categoría, para no repetir el código volvemos a llamar al método
+                //para que añada los plato ya que hemos creado la caegoría
+                this.assignAllergenToDish(allergenName, ...dishes);
             }
-
-            // Buscar la categoría en el sistema
-            let allergen = this.#allergens.find((cat) => cat.name === allergenName);
-
-            // Si el alergeno no existe, se añade al sistema
-            if (!allergen) {
-                allergen = { name: allergenName, dishes: [] };
-                this.#allergens.push(allergen);
-            }
-
-            // Buscar el plato en el sistema
-            let dish = this.#dishes.find((d) => d.name === dishName);
-
-            // Si el plato no existe, se añade al sistema
-            if (!dish) {
-                dish = { name: dishName, allergen: [] };
-                this.#dishes.push(dish);
-            }
-
-            // Asignar el plato a la categoría
-            allergen.dishes.push(dish);
-            // Asignar la categoría al plato
-            dish.allergen = allergen;
-
-            // Permitir encadenar llamadas
-            return this;
         }
 
 
         // Método para asignar un plato a un menu
-        assignMenuToDish(menuName, ...dishName) {
-            // Verificar si allergen es null
+        assignMenuToDish(menuName, ...dishes) {
+            //primero nos aseguramos que introducimos un tipo de categoria
+            if (!(menuName instanceof Menu)) {
+                throw new CategoryException();
+            }
             if (menuName === null) {
-                throw new Error("El menu es null.");
+                throw new EmptyValueException();
             }
 
-            // Verificar si Dish es null
-            if (dishName === null) {
-                throw new Error("El plato es null.");
+            //segundo tenemos que encontrar la categoria
+            let obj = { menu: menuName };
+            let menuPosition = this.#getMenuPosition(obj);
+            if (menuPosition !== -1) {
+                //Buscar la posición del plato en la categoria
+                //vamos pasando por cada plato
+                for (let di of dishes) {
+                    if (!(di instanceof Dish)) {
+                        throw new DishException();
+                    }
+                    if (di === null) {
+                        throw new EmptyValueException();
+                    }
+
+                    //comprobamos si el plato existe en nuestra colección de platos, y si no existe lo añadimos
+                    if (this.#getDishPosition(di) === -1) {
+                        this.addDish(di);
+                    }
+
+                    let objMenu = this.#menus[menuPosition];
+                    let dishIndex = objMenu.dishes.findIndex(
+                        (busqueda) => busqueda.name === di.name
+                    );
+
+                    if (dishIndex !== -1) {
+                        throw new DishInTheListException();
+                    } else {
+                        this.#menus[menuPosition].dishes.push(di);
+                    }
+                }
+            } else {
+                //si la categoría no existe se crea
+                this.addMenu(menuName);
+                //como ya vamos a tener esa categoría, para no repetir el código volvemos a llamar al método
+                //para que añada los plato ya que hemos creado la caegoría
+                this.assignMenuToDish(menuName, ...dishes);
             }
-
-            // Buscar el menu en el sistema
-            let menu = this.#menus.find((cat) => cat.name === menuName);
-
-            // Si el menu no existe, se añade al sistema
-            if (!menu) {
-                menu = { name: menuName, dishes: [] };
-                this.#menus.push(menu);
-            }
-
-            // Buscar el plato en el sistema
-            let dish = this.#dishes.find((d) => d.name === dishName);
-
-            // Si el plato no existe, se añade al sistema
-            if (!dish) {
-                dish = { name: dishName, menu: [] };
-                this.#dishes.push(dish);
-            }
-
-            // Asignar el plato a la categoría
-            menu.dishes.push(dish);
-            // Asignar la categoría al plato
-            dish.menu = menu;
-
-            // Permitir encadenar llamadas
-            return this;
         }
+
 
 
         // Método para desasignar un plato de una categoría

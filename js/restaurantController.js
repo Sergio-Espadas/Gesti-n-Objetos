@@ -75,6 +75,8 @@ class RestaurantController {
             "URL_mixto_En_Salsa");
 
 
+        this[MODEL].addDish(italiana, smash, vegetariana, barbacoa, pollo, mixto, vegetal, ternera, chocolate, vainilla, pistacho, nata);
+
         // Crear un objeto de la clase Category
         let brochetas = new Category("Brochetas", "Pimiento, cebolla y carne...");
         let hamburguesas = new Category("Hamburguesas", "Jugosas y al punto");
@@ -122,6 +124,7 @@ class RestaurantController {
         this[MODEL].assignMenuToDish(menuHamburguesas, barbacoa, vegetariana, smash);
         this[MODEL].assignMenuToDish(menuHelados, nata, vainilla, chocolate);
         this[MODEL].assignMenuToDish(menuBrochetas, ternera, vegetal, pollo);
+
     }
 
     onLoad = () => {
@@ -133,7 +136,9 @@ class RestaurantController {
         this[VIEW].showAdminMenu();
         this[VIEW].bindAdminMenu(
             this.handleNewCategoryForm,
-            this.handleRemoveCategoryForm);
+            this.handleRemoveCategoryForm,
+            this.handleNewProductForm,
+            this.handleRemoveProductForm);
     };
 
     onInit = () => {
@@ -174,7 +179,6 @@ class RestaurantController {
     };
 
     handleDishesCategoryList = (title) => {
-        console.log(title);
         const category = (this[MODEL].getCategory(title));
         this[VIEW].listCategories(this[MODEL].getCategoryProducts(category),
             category.name);
@@ -182,7 +186,6 @@ class RestaurantController {
     };
 
     handleDishesAllergenList = (title) => {
-        console.log(title);
         const allergen = (this[MODEL].getAllergen(title));
         this[VIEW].listAllergens(this[MODEL].getAllergenProducts(allergen),
             allergen.name);
@@ -190,7 +193,6 @@ class RestaurantController {
     };
 
     handleDishesMenuList = (title) => {
-        console.log(title);
         const menu = (this[MODEL].getMenu(title));
         this[VIEW].listMenus(this[MODEL].getMenuProducts(menu),
             menu.name);
@@ -198,7 +200,6 @@ class RestaurantController {
     };
 
     handleRestaurantList = (title) => {
-        console.log(title);
         const restaurant = (this[MODEL].getRestaurant(title));
         this[VIEW].listRestaurant(this[MODEL].getRestaurantsDetails(restaurant),
             restaurant.name);
@@ -221,10 +222,8 @@ class RestaurantController {
 
     handleShowProductInNewWindow = (name) => {
 
-        console.log(name);
         let dish = this[MODEL].getDish(name);
 
-        console.log(dish);
 
         this[VIEW].showProductInNewWindow(dish);
 
@@ -239,7 +238,6 @@ class RestaurantController {
 
     handleCreateCategory = (title, url, desc) => {
         const cat = this[MODEL].getCategorie(title);
-        console.log(cat)
         cat.description = desc;
         let done;
         let error;
@@ -261,8 +259,9 @@ class RestaurantController {
     };
 
     handleRemoveCategory = (title) => {
-        let done; let error; let
-            cat;
+        let done;
+        let error;
+        let cat;
         try {
             cat = this[MODEL].getCategory(title);
             this[MODEL].removeCategory(cat);
@@ -275,6 +274,74 @@ class RestaurantController {
         }
         this[VIEW].showRemoveCategoryModal(done, cat, error);
     };
+
+    handleNewProductForm = () => {
+        this[VIEW].showNewProductForm(this[MODEL].getCategories(), this[MODEL].getAllergens());
+        this[VIEW].bindNewProductForm(this.handleCreateProduct);
+    };
+
+    handleCreateProduct = (name, description, ingredients, image, categories, allergens) => {
+        let done;
+        let error;
+        let dish;
+
+        try {
+            dish = this[MODEL].getDishNT(name);
+            dish.description = description;
+            dish.ingredients = ingredients;
+            dish.image = image;
+            this[MODEL].addDish(dish);
+            categories.forEach((title) => {
+                const category = this[MODEL].getCategory(title);
+                this[MODEL].assignCategoryToDish(category.category, dish);
+            });
+            allergens.forEach((title) => {
+                const allergen = this[MODEL].getAllergen(title);
+                this[MODEL].assignAllergenToDish(allergen.allergen, dish);
+            });
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+
+        this[VIEW].showNewProductModal(done, dish, error);
+    };
+
+    handleRemoveProductListByCategory = (title) => {
+        console.log(title)
+        const cat = this[MODEL].getCategory(title);
+        console.log(cat)
+        this[VIEW].showRemoveProductList(this[MODEL].getCategoryProducts(cat));
+        this[VIEW].bindRemoveProduct(this.handleRemoveProduct);
+    };
+
+    handleRemoveProductForm = () => {
+        this[VIEW].showRemoveProductForm(this[MODEL].getCategories());
+        this[VIEW].bindRemoveProductSelects(this.handleRemoveProductListByCategory);
+    };
+
+
+    handleRemoveProduct = (serial) => {
+        let done;
+        let error;
+        let product;
+        try {
+            console.log(serial)
+            product = this[MODEL].getDish(serial);
+            console.log(product)
+            this[MODEL].removeDish(product);
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+
+        this[VIEW].showRemoveProductModal(done, product, error);
+    };
+
+
+
 
 }
 

@@ -31,8 +31,10 @@ function newCategoryValidation(handler) {
     form.addEventListener('submit', function (event) {
         let isValid = true;
         let firstInvalidElement = null;
+
         this.ncDescription.value = this.ncDescription.value.trim();
         showFeedBack(this.ncDescription, true);
+
         if (!this.ncUrl.checkValidity()) {
             isValid = false;
             showFeedBack(this.ncUrl, false);
@@ -57,7 +59,7 @@ function newCategoryValidation(handler) {
         event.stopPropagation();
     });
     form.addEventListener('reset', (function (event) {
-        for (const div of this.querySelectorAll('div.valid-feedback, div.invalid - feedback')) {
+        for (const div of this.querySelectorAll('div.valid-feedback, div.invalid-feedback')) {
             div.classList.remove('d-block');
             div.classList.add('d-none');
         }
@@ -83,6 +85,9 @@ function newProductValidation(handler) {
         this.npDescription.value = this.npDescription.value.trim();
         showFeedBack(this.npDescription, true);
 
+        this.npIngredients.value = this.npIngredients.value.trim();
+        showFeedBack(this.npIngredients, true);
+
         if (!this.npCategories.checkValidity()) {
             isValid = false;
             showFeedBack(this.npCategories, false);
@@ -91,52 +96,21 @@ function newProductValidation(handler) {
             showFeedBack(this.npCategories, true);
         }
 
+        if (!this.npAllergen.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.npAllergen, false);
+            firstInvalidElement = this.npAllergen;
+        } else {
+            showFeedBack(this.npAllergen, true);
+        }
+
+
         if (!this.npUrl.checkValidity()) {
             isValid = false;
             showFeedBack(this.npUrl, false);
             firstInvalidElement = this.npUrl;
         } else {
             showFeedBack(this.npUrl, true);
-        }
-
-        if (!this.npTax.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.npTax, false);
-            firstInvalidElement = this.npTax;
-        } else {
-            showFeedBack(this.npTax, true);
-        }
-
-        if (!this.npPrice.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.npPrice, false);
-            firstInvalidElement = this.npPrice;
-        } else {
-            showFeedBack(this.npPrice, true);
-        }
-
-        if (!this.npType.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.npType, false);
-            firstInvalidElement = this.cType;
-        } else {
-            showFeedBack(this.npType, true);
-        }
-
-        if (!this.npModel.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.npModel, false);
-            firstInvalidElement = this.npModel;
-        } else {
-            showFeedBack(this.npModel, true);
-        }
-
-        if (!this.npBrand.checkValidity()) {
-            isValid = false;
-            showFeedBack(this.npBrand, false);
-            firstInvalidElement = this.npBrand;
-        } else {
-            showFeedBack(this.npBrand, true);
         }
 
         if (!this.npSerial.checkValidity()) {
@@ -151,16 +125,15 @@ function newProductValidation(handler) {
             firstInvalidElement.focus();
         } else {
             const categories = [...this.npCategories.selectedOptions].map((option) => option.value);
+            const allergens = [...this.npAllergen.selectedOptions].map((option) => option.value);
+            console.log(categories)
             handler(
-                Number.parseInt(this.npSerial.value),
-                this.npBrand.value,
-                this.npModel.value,
-                this.npType.value,
-                this.npPrice.value,
-                this.npTax.value,
+                this.npSerial.value,
                 this.npUrl.value,
                 this.npDescription.value,
+                this.npIngredients.value,
                 categories,
+                allergens,
             );
         }
 
@@ -181,13 +154,7 @@ function newProductValidation(handler) {
     }));
 
     form.npSerial.addEventListener('change', defaultCheckElement);
-    form.npBrand.addEventListener('change', defaultCheckElement);
-    form.npModel.addEventListener('change', defaultCheckElement);
-    form.npType.addEventListener('change', defaultCheckElement);
-    form.npPrice.addEventListener('change', defaultCheckElement);
-    form.npTax.addEventListener('change', defaultCheckElement);
     form.npUrl.addEventListener('change', defaultCheckElement);
-    form.npDescription.addEventListener('change', defaultCheckElement);
 }
 
 
