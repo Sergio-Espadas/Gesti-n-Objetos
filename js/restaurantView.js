@@ -1,6 +1,6 @@
 const EXCECUTE_HANDLER = Symbol('excecuteHandler');
 import { Category } from './restaurant.js';
-import { newCategoryValidation, newProductValidation } from './validation.js';
+import { newCategoryValidation, newProductValidation, newRestaurantValidation } from './validation.js';
 
 class RestaurantView {
 
@@ -128,23 +128,12 @@ class RestaurantView {
     }
 
     showRestaurantsInMenu(restaurants) {
-        const div = document.createElement('div');
-        div.id = 'restaurant-list';
-        div.classList.add('nav-item');
-        div.classList.add('dropdown');
-        div.insertAdjacentHTML('beforeend',
-            `<a class="nav-link dropdown-toggle"
-            href="#restaurantlist" id="navRes" role="button"
-            data-bs-toggle="dropdown" aria-expanded="false">
-            Restaurantes</a>`);
-        const container = document.createElement('ul');
-        container.classList.add('dropdown-menu');
-        for (const res of restaurants) {
-            container.insertAdjacentHTML('beforeend', `<div><a data-restaurant="${res.name}" 
-            class="dropdown-item" href="#restaurant">${res.name}</a></div>`);
+        const navRes = document.getElementById('navRes');
+        const container = navRes.nextElementSibling;
+        container.replaceChildren();
+        for (const restaurant of restaurants) {
+            container.insertAdjacentHTML('beforeend', `<li><a data-restaurant="${restaurant.name}" class="dropdown-item" href="#restaurantlist">${restaurant.name}</a></li>`);
         }
-        div.append(container);
-        this.menu.append(div);
     }
 
     showDishes(dishes) {
@@ -251,7 +240,8 @@ class RestaurantView {
 
     bindRestaurantListInMenu(handler) {
         const navRes = document.getElementById('navRes');
-        const links = navRes.nextSibling.querySelectorAll('a');
+
+        const links = navRes.nextElementSibling.querySelectorAll('a');
         for (const link of links) {
             link.addEventListener('click', (event) => {
                 const { restaurant } = event.currentTarget.dataset;
@@ -567,6 +557,7 @@ class RestaurantView {
         suboptions.insertAdjacentHTML('beforeend', `<li><a id="ldelCategory" class="dropdown-item" href ="#del-category" > Eliminar categoría</a ></li > `);
         suboptions.insertAdjacentHTML('beforeend', `<li><a id="lnewProduct" class="dropdown-item" href ="#new-product" > Crear producto</a ></li > `);
         suboptions.insertAdjacentHTML('beforeend', `<li><a id="ldelProduct" class="dropdown-item" href ="#del-product" > Eliminar producto</a ></li > `);
+        suboptions.insertAdjacentHTML('beforeend', `<li><a id="lnewRestaurant" class="dropdown-item" href ="#new-restaurant" > Crear restaurante</a ></li > `);
         menuOption.append(suboptions);
         this.menu.append(menuOption);
     }
@@ -627,7 +618,7 @@ class RestaurantView {
         this.platos.append(container);
     }
 
-    bindAdminMenu(hNewCategory, hRemoveCategory, hNewProductForm, hRemoveProduct) {
+    bindAdminMenu(hNewCategory, hRemoveCategory, hNewProductForm, hRemoveProduct, hNewRestaurantForm) {
         const newCategoryLink = document.getElementById('lnewCategory');
         newCategoryLink.addEventListener('click', (event) => {
             this[EXCECUTE_HANDLER](hNewCategory, [], '#new-category', {
@@ -651,6 +642,11 @@ class RestaurantView {
         const delProductLink = document.getElementById('ldelProduct');
         delProductLink.addEventListener('click', (event) => {
             this[EXCECUTE_HANDLER](hRemoveProduct, [], '#remove-product', { action: 'removeProduct' }, '#', event);
+        });
+
+        const newRestaurantLink = document.getElementById('lnewRestaurant');
+        newRestaurantLink.addEventListener('click', (event) => {
+            this[EXCECUTE_HANDLER](hNewRestaurantForm, [], '#new-restaurant', { action: 'fNewRestaurant' }, '#', event);
         });
     }
 
@@ -839,7 +835,7 @@ class RestaurantView {
         form.insertAdjacentHTML(
             'beforeend',
             `<div class="col-md-4 mb-0">
-                    <label class="form-label" for="npModel">Descripción</label>
+                    <label class="form-label" for="npDescription">Descripción</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
                         <textarea class="form-control" id="npDescription" name="npDescription" rows="4">
@@ -852,7 +848,7 @@ class RestaurantView {
         form.insertAdjacentHTML(
             'beforeend',
             `<div class="col-md-3 mb-0">
-                    <label class="form-label" for="npModel">Ingredintes</label>
+                    <label class="form-label" for="npIngredients">Ingredintes</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
                         <textarea class="form-control" id="npIngredients" name="npIngredients" rows="4">
@@ -1034,6 +1030,272 @@ class RestaurantView {
         messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
     }
 
+    // Formulario de asignacion o desasignacion junto con orden de los menus
+    showNewProductForm(categories, allergens) {
+        this.platos.replaceChildren();
+        if (this.categories.children.length > 1) this.categories.children[1].remove();
+
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'new-product';
+
+        container.insertAdjacentHTML(
+            'afterbegin',
+            '<h1 class="display-5">Nuevo producto</h1>',
+        );
+
+        const form = document.createElement('form');
+        form.name = 'fNewProduct';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+        form.classList.add('row');
+        form.classList.add('g-3');
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npSerial">Nombre *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="text" class="form-control" id="npSerial" name="npSerial" value="" required>
+                        <div class="invalid-feedback">El número de serie es obligatorio. Debe ser un entero.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npUrl">URL *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-card-image"></i></span>
+                        <input type="url" class="form-control" id="npUrl" name="npUrl"
+                            placeholder="http://www.test.es" value="" min="0" step="1" required>
+                        <div class="invalid-feedback">La URL no es válida.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npCategories">Categorías *</label>
+                    <div class="input-group">
+                        <label class="input-group-text" for="npCategories"><i class="bi bi-card-checklist"></i></label>
+                        <select class="form-select" name="npCategories" id="npCategories" multiple required>
+                        </select>
+                        <div class="invalid-feedback">El producto debe pertenecer al menos a una categoría.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        const npCategories = form.querySelector('#npCategories');
+        for (const category of categories) {
+            npCategories.insertAdjacentHTML('beforeend', `<option value="${category.category.name}">${category.category.name}</option>`);
+        }
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="npAllergen">Alergenos *</label>
+                    <div class="input-group">
+                        <label class="input-group-text" for="npAllergen"><i class="bi bi-card-checklist"></i></label>
+                        <select class="form-select" name="npAllergen" id="npAllergen" multiple required>
+                        </select>
+                        <div class="invalid-feedback">El producto debe pertenecer al menos a una categoría.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        const npAllergen = form.querySelector('#npAllergen');
+        for (const allergen of allergens) {
+            npAllergen.insertAdjacentHTML('beforeend', `<option value="${allergen.allergen.name}">${allergen.allergen.name}</option>`);
+        }
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-4 mb-0">
+                    <label class="form-label" for="npModel">Descripción</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                        <textarea class="form-control" id="npDescription" name="npDescription" rows="4">
+                        </textarea>
+                        <div class="invalid-feedback"></div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-3 mb-0">
+                    <label class="form-label" for="npModel">Ingredintes</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                        <textarea class="form-control" id="npIngredients" name="npIngredients" rows="4">
+                        </textarea>
+                        <div class="invalid-feedback"></div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="mb-12">
+                    <button class="btn btn-primary" type="submit">Enviar</button>
+                    <button class="btn btn-primary" type="reset">Cancelar</button>
+                </div>`,
+        );
+
+        container.append(form);
+        this.platos.append(container);
+    }
+
+    // Modal de que se a asignado o desasignado todo bien o cambiado el orden
+    showNewProductModal(done, dish, error) {
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = 'Nuevo Plato';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">El plato <strong>${dish.name}</strong> ha sido creada correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3"><i class="bi bi-exclamation-triangle"></i> El plato <strong>${dish.name}</strong> no ha podido crearse correctamente.</div>`,
+            );
+        }
+        messageModal.show();
+        const listener = (event) => {
+            if (done) {
+                document.fNewProduct.reset();
+            }
+            document.fNewProduct.npSerial.focus();
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
+    }
+
+
+    // Mandamos la informacion a validar
+    bindNewProductForm(handler) {
+        newProductValidation(handler);
+    }
+
+
+
+
+
+
+    // Visualizacion de la creación de restaurantes
+    showNewRestaurantForm() {
+        this.platos.replaceChildren();
+
+        const container = document.createElement('div');
+        container.classList.add('container');
+        container.classList.add('my-3');
+        container.id = 'new-restaurant';
+
+        container.insertAdjacentHTML(
+            'afterbegin',
+            '<h1 class="display-5">Nuevo restaurante</h1>',
+        );
+
+        const form = document.createElement('form');
+        form.name = 'fNewRestaurant';
+        form.setAttribute('role', 'form');
+        form.setAttribute('novalidate', '');
+        form.classList.add('row');
+        form.classList.add('g-3');
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="nrName">Nombre *</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="text" class="form-control" id="nrName" name="nrName" value="" required>
+                        <div class="invalid-feedback">El número de serie es obligatorio. Debe ser un entero.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-5 mb-3">
+                    <label class="form-label" for="nrLocation">Localización</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="text" class="form-control" id="nrLocation" name="nrLocation" value="" required>
+                        <div class="invalid-feedback">El número de serie es obligatorio. Debe ser un entero.</div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="col-md-4 mb-0">
+                    <label class="form-label" for="nrDescription">Descripción</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-text-paragraph"></i></span>
+                        <textarea class="form-control" id="nrDescription" name="nrDescription" rows="4">
+                        </textarea>
+                        <div class="invalid-feedback"></div>
+                        <div class="valid-feedback">Correcto.</div>
+                    </div>
+                </div>`,
+        );
+
+        form.insertAdjacentHTML(
+            'beforeend',
+            `<div class="mb-12">
+                    <button class="btn btn-primary" type="submit">Enviar</button>
+                    <button class="btn btn-primary" type="reset">Cancelar</button>
+                </div>`,
+        );
+
+        container.append(form);
+        this.platos.append(container);
+    }
+
+    // Modal que nos indicaraque todo fue bien creado
+
+    showNewRestaurantModal(done, restaurant, error) {
+        const messageModalContainer = document.getElementById('messageModal');
+        const messageModal = new bootstrap.Modal('#messageModal');
+
+        const title = document.getElementById('messageModalTitle');
+        title.innerHTML = 'Nuevo Restaurante';
+        const body = messageModalContainer.querySelector('.modal-body');
+        body.replaceChildren();
+        if (done) {
+            body.insertAdjacentHTML('afterbegin', `<div class="p-3">El restaurante <strong>${restaurant.name}</strong> ha sido creada correctamente.</div>`);
+        } else {
+            body.insertAdjacentHTML(
+                'afterbegin',
+                `<div class="error text-danger p-3"><i class="bi bi-exclamation-triangle"></i> El restaurante <strong>${restaurant.name}</strong> no ha podido crearse correctamente.</div>`,
+            );
+        }
+        messageModal.show();
+        const listener = (event) => {
+            if (done) {
+                document.fNewRestaurant.reset();
+            }
+            document.fNewRestaurant.nrName.focus();
+        };
+        messageModalContainer.addEventListener('hidden.bs.modal', listener, { once: true });
+    }
+
+    // Con esto enlazamos la validación
+    bindNewRestaurantForm(handler) {
+        newRestaurantValidation(handler);
+    }
 
 }
 

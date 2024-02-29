@@ -232,7 +232,7 @@ class Restaurant {
                 return this.#description;
             },
             set(value) {
-                if (!value) throw new EmptyValueException('description');
+                // if (!value) throw new EmptyValueException('description');
                 this.#description = value;
             },
         });
@@ -245,7 +245,7 @@ class Restaurant {
                 return this.#location;
             },
             set(value) {
-                if (!value) throw new EmptyValueException('location');
+                // if (!value) throw new EmptyValueException('location');
                 this.#location = value;
             },
         });
@@ -365,7 +365,6 @@ let RestaurantsManager = (function () {
 
             if (this.#allergens.includes(allergen)) {
                 const storedAllergen = this.#allergens.find(ct => ct.allergen === allergen.allergen);
-                console.log(storedAllergen)
                 const values = (ordered)
                     ? storedAllergen.dishes(ordered)
                     : storedAllergen.dishes;
@@ -424,8 +423,8 @@ let RestaurantsManager = (function () {
             let restaurants = this.#restaurants;
 
             for (const res of restaurants) {
-                if (res.name.includes(title)) {
-                    var resDet = res;
+                if (res instanceof Restaurant) {
+                    var resDet = this.#restaurants.find(ct => ct.name === title);
                 }
             }
 
@@ -435,6 +434,17 @@ let RestaurantsManager = (function () {
                 throw new Error("No se encontro el restaurante " + title);
             }
 
+        }
+
+        getRestaurantCr(title = 'Anon') {
+            let rest = this.#restaurants.includes(title);
+
+            if (!rest) {
+                rest = new Restaurant(title);
+            } else {
+                rest = rest;
+            }
+            return rest;
         }
 
         getCategorie(title = 'Anon') {
@@ -516,6 +526,21 @@ let RestaurantsManager = (function () {
             };
         }
 
+        // Getter para obtener un iterador de restaurantes
+        getRestaurants() {
+            const restaurantIterator = this.#restaurants;
+            return {
+                *[Symbol.iterator]() {
+                    for (const restaurant of restaurantIterator) {
+                        if (restaurant instanceof Restaurant) {
+                            yield restaurant;
+                        }
+
+                    }
+                },
+            };
+        }
+
         // Getter para obtener un iterador de categorías
         getCategories() {
             const categories = this.#categories;
@@ -536,7 +561,6 @@ let RestaurantsManager = (function () {
             return {
                 *[Symbol.iterator]() {
                     for (const allergen of allergenIterator) {
-                        console.log(allergen)
                         if (allergen.allergen instanceof Allergen) {
                             yield allergen;
                         }
@@ -559,7 +583,6 @@ let RestaurantsManager = (function () {
         }
 
         getDish(name) {
-
             let dishes = this.#dishes;
             for (const di of dishes) {
                 if (di instanceof Dish) {
@@ -582,20 +605,6 @@ let RestaurantsManager = (function () {
             }
             return dish;
         }
-
-
-        // Getter para obtener un iterador de restaurantes
-        getRestaurants() {
-            const restaurantIterator = this.#restaurants;
-            return {
-                *[Symbol.iterator]() {
-                    for (const restaurant of restaurantIterator) {
-                        yield restaurant;
-                    }
-                },
-            };
-        }
-
 
         // Método para añadir una nueva categoría
         addCategory(...categories) {
@@ -737,8 +746,7 @@ let RestaurantsManager = (function () {
                 let obj =
 
                     // Añadir el plato al sistema
-                    this.#dishes.push({
-                        dish: dishToAdd,
+                    this.#dishes.push(dish, {
                         categories: [],
                         allergens: [],
                         menu: []
@@ -771,10 +779,10 @@ let RestaurantsManager = (function () {
 
                         // Verificar si objCategory es undefined antes de acceder a dishes
                         if (objCategory && objCategory.dishes) {
-                            let dishIndex = objCategory.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
+                            let dishIndex = objCategory.dishes.findIndex((busqueda) => busqueda === dish);
 
                             if (dishIndex !== -1) {
-                                this.#categories[categoryPosition].dishes.splice(dishIndex, 1);
+                                objCategory.dishes.splice(dishIndex, 1);
                             }
                         }
                     }
@@ -788,10 +796,9 @@ let RestaurantsManager = (function () {
 
                         // Verificar si objAllergen es undefined antes de acceder a dishes
                         if (objAllergen && objAllergen.dishes) {
-                            let dishIndex = objAllergen.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
-
+                            let dishIndex = objAllergen.dishes.findIndex((busqueda) => busqueda === dish);
                             if (dishIndex !== -1) {
-                                this.#allergens[allergenPosition].dishes.splice(dishIndex, 1);
+                                objAllergen.dishes.splice(dishIndex, 1);
                             }
                         }
                     }
@@ -805,10 +812,10 @@ let RestaurantsManager = (function () {
 
                         // Verificar si objAllergen es undefined antes de acceder a dishes
                         if (objMenu && objMenu.dishes) {
-                            let dishIndex = objMenu.dishes.findIndex((busqueda) => busqueda.nombre === dish.nombre);
+                            let dishIndex = objMenu.dishes.findIndex((busqueda) => busqueda === dish);
 
                             if (dishIndex !== -1) {
-                                this.#menus[menuPosition].dishes.splice(dishIndex, 1);
+                                objMenu.dishes.splice(dishIndex, 1);
                             }
                         }
                     }

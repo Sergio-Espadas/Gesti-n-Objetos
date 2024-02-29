@@ -138,7 +138,8 @@ class RestaurantController {
             this.handleNewCategoryForm,
             this.handleRemoveCategoryForm,
             this.handleNewProductForm,
-            this.handleRemoveProductForm);
+            this.handleRemoveProductForm,
+            this.handleNewRestaurantForm);
     };
 
     onInit = () => {
@@ -280,6 +281,7 @@ class RestaurantController {
         this[VIEW].bindNewProductForm(this.handleCreateProduct);
     };
 
+
     handleCreateProduct = (name, description, ingredients, image, categories, allergens) => {
         let done;
         let error;
@@ -341,6 +343,32 @@ class RestaurantController {
     };
 
 
+    // Invocación de los metodos de vista de nuevos restaurantes
+    handleNewRestaurantForm = () => {
+        this[VIEW].showNewRestaurantForm(this[MODEL].categories);
+        this[VIEW].bindNewRestaurantForm(this.handleCreateRestaurant);
+    };
+
+    // Handle de creacion del restaurante en el modelo
+    handleCreateRestaurant = (name, location, description) => {
+        let done;
+        let error;
+        let restaurant;
+
+        try {
+            restaurant = this[MODEL].getRestaurantCr(name);
+            restaurant.location = location;
+            restaurant.description = description;
+            this[MODEL].addRestaurant(restaurant);
+            this.onAddRestaurant();
+            done = true;
+        } catch (exception) {
+            done = false;
+            error = exception;
+        }
+
+        this[VIEW].showNewRestaurantModal(done, restaurant, error);
+    };
 
 
 }

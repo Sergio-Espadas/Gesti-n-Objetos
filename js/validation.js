@@ -158,5 +158,57 @@ function newProductValidation(handler) {
 }
 
 
+function newRestaurantValidation(handler) {
+    const form = document.forms.fNewRestaurant;
+    form.setAttribute('novalidate', '');
 
-export { newCategoryValidation, newProductValidation };
+    form.addEventListener('submit', function (event) {
+        let isValid = true;
+        let firstInvalidElement = null;
+
+        this.nrDescription.value = this.nrDescription.value.trim();
+        showFeedBack(this.nrDescription, true);
+
+        this.nrLocation.value = this.nrLocation.value.trim();
+        showFeedBack(this.nrLocation, true);
+
+        if (!this.nrName.checkValidity()) {
+            isValid = false;
+            showFeedBack(this.nrName, false);
+            firstInvalidElement = this.nrName;
+        } else {
+            showFeedBack(this.nrName, true);
+        }
+
+        if (!isValid) {
+            firstInvalidElement.focus();
+        } else {
+            handler(
+                this.nrName.value,
+                this.nrLocation.value,
+                this.nrDescription.value,
+            );
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+    });
+
+    form.addEventListener('reset', (function (event) {
+        for (const div of this.querySelectorAll('div.valid-feedback, div.invalid-feedback')) {
+            div.classList.remove('d-block');
+            div.classList.add('d-none');
+        }
+        for (const input of this.querySelectorAll('input')) {
+            input.classList.remove('is-valid');
+            input.classList.remove('is-invalid');
+        }
+        this.nrName.focus();
+    }));
+
+    form.nrName.addEventListener('change', defaultCheckElement);
+    form.nrLocation.addEventListener('change', defaultCheckElement);
+}
+
+
+export { newCategoryValidation, newProductValidation, newRestaurantValidation };

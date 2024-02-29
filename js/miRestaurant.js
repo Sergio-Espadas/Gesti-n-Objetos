@@ -18,7 +18,8 @@ const historyActions = {
     newCategory: () => ManagerApp.handleNewCategoryForm(),
     removeCategory: () => ManagerApp.handleRemoveCategoryForm(),
     newProduct: () => ManagerApp.handleNewProductForm(),
-    removeProduct: () => ManagerApp.handleRemoveProductForm()
+    removeProduct: () => ManagerApp.handleRemoveProductForm(),
+    newRestaurant: () => ManagerApp.handleNewRestaurantForm(),
 
 };
 
